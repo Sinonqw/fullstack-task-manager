@@ -1,9 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { addTask, editTask } from "../api/tasks";
 import type Task from "../types/task";
-import { addTaskAdded, onTaskUpdated } from "../redux/tasksSlice";
-import { showNotification } from "../redux/notificationsSlice";
-import useAppDispatch from "../hooks/useAppDispatch";
+import useTaskForm from "../hooks/useTaskForm";
 
 interface AddTaskProps {
   editingTask: Task | null;
@@ -11,27 +7,18 @@ interface AddTaskProps {
 }
 
 const AddTask = ({ editingTask, onEditFinished }: AddTaskProps) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [day, setDay] = useState("");
+  const {
+    title,
+    description,
+    day,
+    setTitle,
+    setDescription,
+    setDay,
+    titleInputRef,
+    handleSubmit,
+    isEditing,
+  } = useTaskForm(editingTask, onEditFinished);
 
-  const titleInputRef = useRef<HTMLInputElement>(null);
-
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    if (editingTask) {
-      setTitle(editingTask.title);
-      setDescription(editingTask.description);
-      setDay(editingTask.day);
-
-      titleInputRef.current?.focus();
-    } else {
-      setTitle("");
-      setDescription("");
-      setDay("");
-    }
-  }, [editingTask]);
   return (
     <form
       className="
@@ -39,46 +26,7 @@ const AddTask = ({ editingTask, onEditFinished }: AddTaskProps) => {
           overflow-hidden rounded-[18px]
           p-6
         "
-      onSubmit={async (e) => {
-        e.preventDefault();
-
-        try {
-          if (editingTask) {
-            const updatedTask = await editTask(
-              editingTask._id,
-              title,
-              description,
-              day,
-              editingTask.completed,
-            );
-
-            dispatch(onTaskUpdated(updatedTask));
-            dispatch(
-              showNotification({ message: "Task updated", type: "success" }),
-            );
-            onEditFinished();
-          } else {
-            const newTask = await addTask(title, description, day);
-
-            setTitle("");
-            setDescription("");
-            setDay("");
-
-            dispatch(addTaskAdded(newTask));
-            dispatch(
-              showNotification({ message: "Task added", type: "success" }),
-            );
-          }
-        } catch (error) {
-          console.error(error);
-          dispatch(
-            showNotification({
-              message: "Something went wrong",
-              type: "error",
-            }),
-          );
-        }
-      }}
+      onSubmit={handleSubmit}
     >
       <label
         htmlFor="task"
@@ -88,7 +36,7 @@ const AddTask = ({ editingTask, onEditFinished }: AddTaskProps) => {
             text-slate-400
           "
       >
-        {editingTask ? "edit your task" : "add task"}
+        {isEditing ? "edit your task" : "add task"}
       </label>
 
       <div className="flex flex-col gap-3">
@@ -205,7 +153,7 @@ const AddTask = ({ editingTask, onEditFinished }: AddTaskProps) => {
               cursor-pointer
             "
         >
-          {editingTask ? "Save" : "Add"}
+          {isEditing ? "Save" : "Add"}
         </button>
       </div>
     </form>

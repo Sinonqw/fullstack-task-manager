@@ -1,7 +1,7 @@
 import axios from "axios";
 import type Task from "../types/task";
 
-const API_URL = "http://localhost:3000/tasks";
+const API_URL = "http://localhost:4000/tasks";
 
 //GET
 
